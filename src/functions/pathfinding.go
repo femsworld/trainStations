@@ -1,7 +1,6 @@
-package main
+package functions
 
 import "container/list"
-
 
 /*
 func bfs(graph *Graph, start, end string) []string {
@@ -34,7 +33,7 @@ func bfs(graph *Graph, start, end string) []string {
 }
 */
 
-func findAllPaths(graph *Graph, start, end string) [][]string {
+func FindAllPaths(graph *Graph, start, end string) [][]string {
 	var paths [][]string
 	queue := list.New()
 	queue.PushBack([]string{start})

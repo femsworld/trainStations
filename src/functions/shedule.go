@@ -1,12 +1,12 @@
-package main
+package functions
 
 import (
 	"fmt"
 	"strings"
 )
 
-func scheduleTrains(graph *Graph, start, end string, numTrains int) {
-	allPaths := findAllPaths(graph, start, end)
+func ScheduleTrains(graph *Graph, start, end string, numTrains int) {
+	allPaths := FindAllPaths(graph, start, end)
 	if len(allPaths) == 0 {
 		fmt.Println("No path found")
 		return

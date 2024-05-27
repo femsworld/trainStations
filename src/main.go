@@ -1,12 +1,11 @@
 package main
 
 import (
-	//"errors"
 	"fmt"
 	"os"
-	//"regexp"
 	"strconv"
-	//"strings"
+
+	"stations/src/functions" // Correct import path
 )
 
 func main() {
@@ -24,18 +23,18 @@ func main() {
 		return
 	}
 
-	graph, err := readGraphFromFile(filePath)
+	graph, err := functions.ReadGraphFromFile(filePath)
 	if err != nil {
 		printError("Error reading network map: " + err.Error())
 		return
 	}
 
-	if !graph.isValidStation(startStation) {
+	if !graph.IsValidStation(startStation) {
 		printError("Start station does not exist")
 		return
 	}
 
-	if !graph.isValidStation(endStation) {
+	if !graph.IsValidStation(endStation) {
 		printError("End station does not exist")
 		return
 	}
@@ -45,20 +44,18 @@ func main() {
 		return
 	}
 
-	if !graph.pathExists(startStation, endStation) {
+	if !graph.PathExists(startStation, endStation) {
 		printError("No path between the start and end stations")
 		return
 	}
 
-	scheduleTrains(graph, startStation, endStation, numTrains)
+	functions.ScheduleTrains(graph, startStation, endStation, numTrains)
 }
 
 func printError(msg string) {
 	fmt.Fprintln(os.Stderr, "Error:", msg)
 }
 
-/*
-func printUsage() {
-	fmt.Println("Usage: go run . [path to file containing network map] [start station] [end station] [number of trains]")
-}
-*/
+// func printUsage() {
+// 	fmt.Println("Usage: go run . [path to file containing network map] [start station] [end station] [number of trains]")
+// }

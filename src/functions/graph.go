@@ -1,4 +1,4 @@
-package main
+package functions
 
 import (
 	"bufio"
@@ -22,7 +22,7 @@ func (g *Graph) AddEdge(from, to string) {
 	g.nodes[to] = append(g.nodes[to], from)
 }
 
-func readGraphFromFile(filePath string) (*Graph, error) {
+func ReadGraphFromFile(filePath string) (*Graph, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -32,13 +32,13 @@ func readGraphFromFile(filePath string) (*Graph, error) {
 	graph := NewGraph()
 	scanner := bufio.NewScanner(file)
 	var readingStations, readingConnections bool
-	var stationCoords = make(map[string]bool)
-	var stationNames = make(map[string]bool)
+	stationCoords := make(map[string]bool)
+	stationNames := make(map[string]bool)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		line = strings.Split(line, "#")[0]  // Remove comments
-		line = strings.TrimSpace(line)      // Remove leading/trailing white space
+		line = strings.Split(line, "#")[0] // Remove comments
+		line = strings.TrimSpace(line)     // Remove leading/trailing white space
 
 		if line == "" {
 			continue
@@ -96,7 +96,7 @@ func readGraphFromFile(filePath string) (*Graph, error) {
 			if !isValidStationName(from) || !isValidStationName(to) {
 				return nil, errors.New("Invalid station name in connection: " + from + "-" + to)
 			}
-			if graph.connectionExists(from, to) {
+			if graph.ConnectionExists(from, to) {
 				return nil, errors.New("Duplicate connection: " + from + "-" + to)
 			}
 			graph.AddEdge(from, to)
@@ -108,12 +108,12 @@ func readGraphFromFile(filePath string) (*Graph, error) {
 	return graph, nil
 }
 
-func (g *Graph) isValidStation(station string) bool {
+func (g *Graph) IsValidStation(station string) bool {
 	_, found := g.nodes[station]
 	return found
 }
 
-func (g *Graph) pathExists(start, end string) bool {
+func (g *Graph) PathExists(start, end string) bool {
 	visited := make(map[string]bool)
 	queue := []string{start}
 	for len(queue) > 0 {
@@ -131,8 +131,7 @@ func (g *Graph) pathExists(start, end string) bool {
 	return false
 }
 
-
-func (g *Graph) connectionExists(from, to string) bool {
+func (g *Graph) ConnectionExists(from, to string) bool {
 	for _, neighbor := range g.nodes[from] {
 		if neighbor == to {
 			return true
