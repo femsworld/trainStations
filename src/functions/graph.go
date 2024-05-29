@@ -2,11 +2,12 @@ package functions
 
 import (
 	"bufio"
-	"errors"
+	//"errors"
+	"fmt"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
+	"strconv"
+	"unicode"
 )
 
 type Graph struct {
@@ -17,130 +18,175 @@ func NewGraph() *Graph {
 	return &Graph{nodes: make(map[string][]string)}
 }
 
-func (g *Graph) AddEdge(from, to string) {
-	g.nodes[from] = append(g.nodes[from], to)
-	g.nodes[to] = append(g.nodes[to], from)
+func (g *Graph) AddNode(name string) error {
+	if _, exists := g.nodes[name]; exists {
+		return fmt.Errorf("duplicate station name: %s", name)
+	}
+	g.nodes[name] = []string{}
+	return nil
 }
 
+func (g *Graph) AddEdge(node1, node2 string) error {
+	if !g.IsValidStation(node1) || !g.IsValidStation(node2) {
+		return fmt.Errorf("connection refers to non-existent station(s): %s-%s", node1, node2)
+	}
+
+	if g.connectionExists(node1, node2) {
+		return fmt.Errorf("duplicate connection between %s and %s", node1, node2)
+	}
+
+	g.nodes[node1] = append(g.nodes[node1], node2)
+	g.nodes[node2] = append(g.nodes[node2], node1)
+	return nil
+}
+
+func (g *Graph) IsValidStation(name string) bool {
+	_, exists := g.nodes[name]
+	return exists
+}
+
+func (g *Graph) PathExists(start, end string) bool {
+	return bfs(g, start, end) != nil
+}
+
+func (g *Graph) connectionExists(node1, node2 string) bool {
+	for _, neighbor := range g.nodes[node1] {
+		if neighbor == node2 {
+			return true
+		}
+	}
+	for _, neighbor := range g.nodes[node2] {
+		if neighbor == node1 {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+func isValidStationName(name string) bool {
+	if strings.TrimSpace(name) == "" {
+		return false
+	}
+	for _, c := range name {
+		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_') {
+			return false
+		}
+	}
+	return true
+}
+*/
+
+// ReadGraphFromFile reads the network map from a file and constructs the graph.
 func ReadGraphFromFile(filePath string) (*Graph, error) {
+	// Open the network map file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	// Initialize a new graph
 	graph := NewGraph()
-	scanner := bufio.NewScanner(file)
-	var readingStations, readingConnections bool
-	stationCoords := make(map[string]bool)
-	stationNames := make(map[string]bool)
 
+	// Initialize a map to store station coordinates
+	stationCoordinates := make(map[string]string)
+
+	// Create a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+
+	// Flags to indicate the current section in the file
+	isStationSection := false
+	isConnectionSection := false
+
+	// Loop through each line in the file
 	for scanner.Scan() {
 		line := scanner.Text()
-		line = strings.Split(line, "#")[0] // Remove comments
-		line = strings.TrimSpace(line)     // Remove leading/trailing white space
+		line = strings.TrimSpace(line)
 
-		if line == "" {
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
+		// Check if the line indicates the start of the "stations:" section
 		if line == "stations:" {
-			if readingConnections {
-				return nil, errors.New("invalid format: stations section encountered after connections section")
-			}
-			readingStations = true
-			continue
-		} else if line == "connections:" {
-			if !readingStations {
-				return nil, errors.New("invalid format: connections section encountered before stations section")
-			}
-			readingStations = false
-			readingConnections = true
+			isStationSection = true
+			isConnectionSection = false
 			continue
 		}
 
-		if readingStations {
+		// Check if the line indicates the start of the "connections:" section
+		if line == "connections:" {
+			isStationSection = false
+			isConnectionSection = true
+			continue
+		}
+
+		// Process lines in the "stations:" section
+		if isStationSection {
 			parts := strings.Split(line, ",")
 			if len(parts) != 3 {
-				return nil, errors.New("invalid format for station data")
+				return nil, fmt.Errorf("invalid station definition: %s", line)
 			}
-			stationName := strings.TrimSpace(parts[0])
-			if !isValidStationName(stationName) {
-				return nil, errors.New("Invalid station name: " + stationName)
+			name := strings.TrimSpace(parts[0])
+			x := strings.TrimSpace(parts[1])
+			y := strings.TrimSpace(parts[2])
+
+			// Check if the station name is valid
+			if !isValidStationName(name) {
+				return nil, fmt.Errorf("invalid station name: %s", name)
 			}
-			if stationNames[stationName] {
-				return nil, errors.New("Duplicate station name: " + stationName)
+
+			// Check if the station coordinates are valid positive integers
+			if !isValidCoordinate(x) || !isValidCoordinate(y) {
+				return nil, fmt.Errorf("invalid coordinates for station %s: %s, %s", name, x, y)
 			}
-			stationNames[stationName] = true
-			coordX, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-			if err != nil || coordX <= 0 {
-				return nil, errors.New("Invalid X-coordinate for station: " + stationName)
+
+			// Check for duplicate coordinates for stations
+			coords := x + "," + y
+			if _, exists := stationCoordinates[coords]; exists {
+				return nil, fmt.Errorf("duplicate coordinates for stations: %s", coords)
 			}
-			coordY, err := strconv.Atoi(strings.TrimSpace(parts[2]))
-			if err != nil || coordY <= 0 {
-				return nil, errors.New("Invalid Y-coordinate for station: " + stationName)
+			stationCoordinates[coords] = name
+
+			// Add the station to the graph
+			if err := graph.AddNode(name); err != nil {
+				return nil, err
 			}
-			coordKey := strconv.Itoa(coordX) + "," + strconv.Itoa(coordY)
-			if stationCoords[coordKey] {
-				return nil, errors.New("two stations exist at the exact same coordinate location")
-			}
-			stationCoords[coordKey] = true
-			graph.nodes[stationName] = []string{}
-		} else if readingConnections {
-			parts := strings.Split(line, "-")
-			if len(parts) != 2 {
-				return nil, errors.New("invalid format for connection data")
-			}
-			from := strings.TrimSpace(parts[0])
-			to := strings.TrimSpace(parts[1])
-			if !isValidStationName(from) || !isValidStationName(to) {
-				return nil, errors.New("Invalid station name in connection: " + from + "-" + to)
-			}
-			if graph.ConnectionExists(from, to) {
-				return nil, errors.New("Duplicate connection: " + from + "-" + to)
-			}
-			graph.AddEdge(from, to)
+		}
+
+	
+		// Process lines in the "connections:" section
+		if isConnectionSection {
+			// Process connection definitions...
+			continue
 		}
 	}
+
+	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
+
+	// Return the populated graph
 	return graph, nil
 }
 
-func (g *Graph) IsValidStation(station string) bool {
-	_, found := g.nodes[station]
-	return found
+// Helper function to check if a coordinate is a valid positive integer
+func isValidCoordinate(coord string) bool {
+	// Check if the coordinate can be parsed as an integer and is greater than or equal to 0
+	val, err := strconv.Atoi(coord)
+	return err == nil && val >= 0
 }
 
-func (g *Graph) PathExists(start, end string) bool {
-	visited := make(map[string]bool)
-	queue := []string{start}
-	for len(queue) > 0 {
-		node := queue[0]
-		queue = queue[1:]
-		if node == end {
-			return true
-		}
-		if visited[node] {
-			continue
-		}
-		visited[node] = true
-		queue = append(queue, g.nodes[node]...)
-	}
-	return false
-}
-
-func (g *Graph) ConnectionExists(from, to string) bool {
-	for _, neighbor := range g.nodes[from] {
-		if neighbor == to {
-			return true
-		}
-	}
-	return false
-}
-
+// Helper function to check if a station name is valid
 func isValidStationName(name string) bool {
-	regex := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
-	return regex.MatchString(name)
+	// Check if the station name contains only alphanumeric characters and underscores
+	for _, c := range name {
+		if !(unicode.IsLetter(c) || unicode.IsDigit(c) || c == '_') {
+			return false
+		}
+	}
+	return true
 }

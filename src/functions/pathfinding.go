@@ -2,37 +2,6 @@ package functions
 
 import "container/list"
 
-/*
-func bfs(graph *Graph, start, end string) []string {
-	visited := make(map[string]bool)
-	prev := make(map[string]string)
-	queue := list.New()
-	queue.PushBack(start)
-	visited[start] = true
-
-	for queue.Len() > 0 {
-		current := queue.Remove(queue.Front()).(string)
-
-		if current == end {
-			var path []string
-			for at := end; at != ""; at = prev[at] {
-				path = append([]string{at}, path...)
-			}
-			return path
-		}
-
-		for _, neighbor := range graph.nodes[current] {
-			if !visited[neighbor] {
-				queue.PushBack(neighbor)
-				visited[neighbor] = true
-				prev[neighbor] = current
-			}
-		}
-	}
-	return nil
-}
-*/
-
 func FindAllPaths(graph *Graph, start, end string) [][]string {
 	var paths [][]string
 	queue := list.New()
@@ -65,4 +34,33 @@ func contains(path []string, station string) bool {
 		}
 	}
 	return false
+}
+
+func bfs(graph *Graph, start, end string) []string {
+	visited := make(map[string]bool)
+	prev := make(map[string]string)
+	queue := list.New()
+	queue.PushBack(start)
+	visited[start] = true
+
+	for queue.Len() > 0 {
+		current := queue.Remove(queue.Front()).(string)
+
+		if current == end {
+			var path []string
+			for at := end; at != ""; at = prev[at] {
+				path = append([]string{at}, path...)
+			}
+			return path
+		}
+
+		for _, neighbor := range graph.nodes[current] {
+			if !visited[neighbor] {
+				queue.PushBack(neighbor)
+				visited[neighbor] = true
+				prev[neighbor] = current
+			}
+		}
+	}
+	return nil
 }

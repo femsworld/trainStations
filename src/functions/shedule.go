@@ -25,22 +25,15 @@ func ScheduleTrains(graph *Graph, start, end string, numTrains int) {
 	currentPositions := make(map[string]int)
 	currentPositions[start] = numTrains
 
-	for {
+	for turn := 1; ; turn++ {
 		allTrainsAtEnd := true
+		var moves []string
+
 		for i := 0; i < numTrains; i++ {
 			if trainPositions[i] != end {
 				allTrainsAtEnd = false
-				break
-			}
-		}
-		if allTrainsAtEnd {
-			break
-		}
-
-		moves := []string{}
-		for i := 0; i < numTrains; i++ {
-			if trainPositions[i] != end {
 				currentPosition := trainPositions[i]
+
 				for j := 0; j < len(trainPaths[i])-1; j++ {
 					if trainPaths[i][j] == currentPosition {
 						nextPosition := trainPaths[i][j+1]
@@ -54,6 +47,10 @@ func ScheduleTrains(graph *Graph, start, end string, numTrains int) {
 					}
 				}
 			}
+		}
+
+		if len(moves) == 0 && allTrainsAtEnd {
+			break
 		}
 
 		fmt.Println(strings.Join(moves, " "))
