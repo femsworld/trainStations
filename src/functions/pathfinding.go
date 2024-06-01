@@ -1,18 +1,19 @@
 package functions
 
-import "container/list"
-
+// FindAllPaths uses a BFS algorithm to find all possible paths between two stations
 func FindAllPaths(graph *Graph, start, end string) [][]string {
-	var paths [][]string
-	queue := list.New()
-	queue.PushBack([]string{start})
+	var result [][]string
+	var queue [][]string
 
-	for queue.Len() > 0 {
-		path := queue.Remove(queue.Front()).([]string)
+	queue = append(queue, []string{start})
+
+	for len(queue) > 0 {
+		path := queue[0]
+		queue = queue[1:]
+
 		last := path[len(path)-1]
-
 		if last == end {
-			paths = append(paths, path)
+			result = append(result, path)
 			continue
 		}
 
@@ -20,21 +21,25 @@ func FindAllPaths(graph *Graph, start, end string) [][]string {
 			if !contains(path, neighbor) {
 				newPath := append([]string{}, path...)
 				newPath = append(newPath, neighbor)
-				queue.PushBack(newPath)
+				queue = append(queue, newPath)
 			}
 		}
 	}
-	return paths
+
+	return result
 }
 
-func contains(path []string, station string) bool {
-	for _, s := range path {
-		if s == station {
+// contains checks if a slice contains a string
+func contains(slice []string, str string) bool {
+	for _, v := range slice {
+		if v == str {
 			return true
 		}
 	}
 	return false
 }
+
+
 
 
 func bfs(graph *Graph, start, end string) []string {

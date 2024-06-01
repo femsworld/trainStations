@@ -68,6 +68,10 @@ func isValidStationName(name string) bool {
 	return true
 }
 
+// MaxStations defines the maximum number of stations allowed
+const MaxStations = 10000
+
+// ReadGraphFromFile reads a network map from a file and returns a Graph
 func ReadGraphFromFile(filePath string) (*Graph, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -83,6 +87,8 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 	seenConnections := false
 
 	stationCoordinates := make(map[string]string)
+	stationCount := 0 // Track the number of stations
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
@@ -103,6 +109,10 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 		}
 
 		if isStationSection {
+			if stationCount >= MaxStations {
+				return nil, errors.New("error: Maximum number of stations exceeded")
+			}
+
 			parts := strings.Split(line, ",")
 			if len(parts) != 3 {
 				return nil, fmt.Errorf("invalid station definition: %s", line)
@@ -122,6 +132,7 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 			if err != nil {
 				return nil, err
 			}
+			stationCount++
 		} else if isConnectionSection {
 			parts := strings.Split(line, "-")
 			if len(parts) != 2 {

@@ -12,7 +12,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 	for i := 0; i < numTrains; i++ {
 		paths[i] = bfs(graph, startStation, endStation)
 		if paths[i] == nil {
-			fmt.Fprintf(os.Stderr, "Error: No path found for train %d\n", i+1)
+			fmt.Fprintf(os.Stderr, "Error: No path found for train %d from %s to %s\n", i+1, startStation, endStation)
 			return
 		}
 		fmt.Printf("Path for train %d: %v\n", i+1, paths[i])
@@ -33,21 +33,17 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 
 		// Map to track number of trains in each station
 		trainsInStation := make(map[string]int)
-		for _, loc := range trainLocations {
-			trainsInStation[loc]++
-		}
 
 		fmt.Printf("Turn %d:\n", turn)
 		// Move each train
-		for i := 0; i < numTrains; i++ {
-			path := paths[i]
+		for i, path := range paths {
 			if len(path) > 1 {
 				source, dest := trainLocations[i], path[1]
 				// Ensure the track is not used more than once in a turn
 				track := fmt.Sprintf("%s-%s", source, dest)
 				if usedTracks[track] {
-					// Skip the movement if the track is already used
-					continue
+					fmt.Fprintf(os.Stderr, "Error: Track %s is used more than once in turn %d\n", track, turn)
+					return
 				}
 				usedTracks[track] = true
 
@@ -57,7 +53,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 				if trainLocations[i] != startStation && trainLocations[i] != endStation {
 					trainsInStation[source]--
 					if trainsInStation[source] > 1 {
-						fmt.Fprintf(os.Stderr, "Error: More than one train in station %s\n", source)
+						fmt.Fprintf(os.Stderr, "Error: More than one train in station %s at turn %d\n", source, turn)
 						return
 					}
 				}
@@ -66,7 +62,6 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 				if movements[i] == "" {
 					movements[i] = fmt.Sprintf("T%d-%s", i+1, dest)
 					trainLocations[i] = dest
-					trainsInStation[dest]++
 
 					// Remove the station from the path after the move
 					paths[i] = paths[i][1:]
