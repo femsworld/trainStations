@@ -1,7 +1,7 @@
 package functions
 
 import (
-    "fmt"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -15,6 +15,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 			fmt.Fprintf(os.Stderr, "Error: No path found for train %d\n", i+1)
 			return
 		}
+		fmt.Printf("Path for train %d: %v\n", i+1, paths[i])
 	}
 
 	maxTurns := 6 // Maximum number of turns to prevent infinite loops
@@ -32,20 +33,25 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 
 		// Map to track number of trains in each station
 		trainsInStation := make(map[string]int)
+		for _, loc := range trainLocations {
+			trainsInStation[loc]++
+		}
 
+		fmt.Printf("Turn %d:\n", turn)
 		// Move each train
-		for i, path := range paths {
+		for i := 0; i < numTrains; i++ {
+			path := paths[i]
 			if len(path) > 1 {
-				// Move the train
 				source, dest := trainLocations[i], path[1]
-
 				// Ensure the track is not used more than once in a turn
 				track := fmt.Sprintf("%s-%s", source, dest)
 				if usedTracks[track] {
-					fmt.Fprintf(os.Stderr, "Error: Track %s is used more than once in turn %d\n", track, turn)
-					return
+					// Skip the movement if the track is already used
+					continue
 				}
 				usedTracks[track] = true
+
+				fmt.Printf("Train %d moving from %s to %s\n", i+1, source, dest)
 
 				// Ensure only one train is in each station (except start and end)
 				if trainLocations[i] != startStation && trainLocations[i] != endStation {
@@ -60,6 +66,10 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 				if movements[i] == "" {
 					movements[i] = fmt.Sprintf("T%d-%s", i+1, dest)
 					trainLocations[i] = dest
+					trainsInStation[dest]++
+
+					// Remove the station from the path after the move
+					paths[i] = paths[i][1:]
 				} else {
 					fmt.Fprintf(os.Stderr, "Error: Train T%d moves more than once in turn %d\n", i+1, turn)
 					return
@@ -68,7 +78,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 		}
 
 		// Print movements for this turn
-		fmt.Printf("Turn %d: %s\n", turn, strings.Join(movements, ", "))
+		fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(movements, ", "))
 
 		// Check if all trains reached the end station
 		allTrainsAtEnd := true
