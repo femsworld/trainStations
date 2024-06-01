@@ -7,18 +7,21 @@ import (
 )
 
 func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int) {
-	// Find paths for each train
+	// Find all possible paths for each train
+	allPaths := FindAllPaths(graph, startStation, endStation)
+	if len(allPaths) == 0 {
+		fmt.Fprintf(os.Stderr, "Error: No paths found from %s to %s\n", startStation, endStation)
+		return
+	}
+
+	// Select paths for each train
 	paths := make([][]string, numTrains)
 	for i := 0; i < numTrains; i++ {
-		paths[i] = bfs(graph, startStation, endStation)
-		if paths[i] == nil {
-			fmt.Fprintf(os.Stderr, "Error: No path found for train %d from %s to %s\n", i+1, startStation, endStation)
-			return
-		}
+		paths[i] = allPaths[i%len(allPaths)] // Distribute paths to trains
 		fmt.Printf("Path for train %d: %v\n", i+1, paths[i])
 	}
 
-	maxTurns := 6 // Maximum number of turns to prevent infinite loops
+	maxTurns := 11 // Set the maximum number of turns
 	trainLocations := make([]string, numTrains)
 	for i := range trainLocations {
 		trainLocations[i] = startStation
@@ -33,17 +36,21 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 
 		// Map to track number of trains in each station
 		trainsInStation := make(map[string]int)
+		for _, loc := range trainLocations {
+			trainsInStation[loc]++
+		}
 
 		fmt.Printf("Turn %d:\n", turn)
 		// Move each train
-		for i, path := range paths {
+		for i := 0; i < numTrains; i++ {
+			path := paths[i]
 			if len(path) > 1 {
 				source, dest := trainLocations[i], path[1]
 				// Ensure the track is not used more than once in a turn
 				track := fmt.Sprintf("%s-%s", source, dest)
 				if usedTracks[track] {
-					fmt.Fprintf(os.Stderr, "Error: Track %s is used more than once in turn %d\n", track, turn)
-					return
+					// Skip the movement if the track is already used
+					continue
 				}
 				usedTracks[track] = true
 
@@ -53,7 +60,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 				if trainLocations[i] != startStation && trainLocations[i] != endStation {
 					trainsInStation[source]--
 					if trainsInStation[source] > 1 {
-						fmt.Fprintf(os.Stderr, "Error: More than one train in station %s at turn %d\n", source, turn)
+						fmt.Fprintf(os.Stderr, "Error: More than one train in station %s\n", source)
 						return
 					}
 				}
@@ -62,6 +69,7 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 				if movements[i] == "" {
 					movements[i] = fmt.Sprintf("T%d-%s", i+1, dest)
 					trainLocations[i] = dest
+					trainsInStation[dest]++
 
 					// Remove the station from the path after the move
 					paths[i] = paths[i][1:]
