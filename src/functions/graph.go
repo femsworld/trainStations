@@ -2,10 +2,10 @@ package functions
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
-	"errors"
 )
 
 type Graph struct {
@@ -17,6 +17,7 @@ func NewGraph() *Graph {
 }
 
 func (g *Graph) AddNode(name string) error {
+	name = strings.ToLower(name) // Convert to lowercase
 	if _, exists := g.nodes[name]; exists {
 		return fmt.Errorf("duplicate station name: %s", name)
 	}
@@ -25,6 +26,8 @@ func (g *Graph) AddNode(name string) error {
 }
 
 func (g *Graph) AddEdge(node1, node2 string) error {
+	node1 = strings.ToLower(node1) // Convert to lowercase
+	node2 = strings.ToLower(node2) // Convert to lowercase
 	if g.connectionExists(node1, node2) {
 		return fmt.Errorf("duplicate connection between %s and %s", node1, node2)
 	}
@@ -34,11 +37,14 @@ func (g *Graph) AddEdge(node1, node2 string) error {
 }
 
 func (g *Graph) IsValidStation(name string) bool {
+	name = strings.ToLower(name) // Convert to lowercase
 	_, exists := g.nodes[name]
 	return exists
 }
 
 func (g *Graph) PathExists(start, end string) bool {
+	start = strings.ToLower(start) // Convert to lowercase
+	end = strings.ToLower(end)     // Convert to lowercase
 	return bfs(g, start, end) != nil
 }
 
@@ -117,7 +123,7 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 			if len(parts) != 3 {
 				return nil, fmt.Errorf("invalid station definition: %s", line)
 			}
-			name := strings.TrimSpace(parts[0])
+			name := strings.ToLower(strings.TrimSpace(parts[0]))
 			x := strings.TrimSpace(parts[1])
 			y := strings.TrimSpace(parts[2])
 
@@ -138,8 +144,8 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("invalid connection definition: %s", line)
 			}
-			node1 := strings.TrimSpace(parts[0])
-			node2 := strings.TrimSpace(parts[1])
+			node1 := strings.ToLower(strings.TrimSpace(parts[0]))
+			node2 := strings.ToLower(strings.TrimSpace(parts[1]))
 			if !graph.IsValidStation(node1) || !graph.IsValidStation(node2) {
 				return nil, fmt.Errorf("connection refers to non-existent station(s): %s-%s", node1, node2)
 			}

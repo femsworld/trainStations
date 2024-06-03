@@ -16,8 +16,8 @@ func main() {
 	}
 
 	mapFile := os.Args[1]
-	startStation := strings.ToLower(os.Args[2])
-	endStation := strings.ToLower(os.Args[3])
+	startStation := strings.ToLower(os.Args[2]) // Convert to lowercase
+	endStation := strings.ToLower(os.Args[3])   // Convert to lowercase
 
 	numTrains := 3 // default number of trains
 	if len(os.Args) == 5 {
