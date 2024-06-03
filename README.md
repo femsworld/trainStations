@@ -21,7 +21,7 @@ git clone https://gitea.koodsisu.fi/ayodejiolumuyiwa/stations.git
 
 ## File Structure
 
-`functions`: Contains Go source files for various functionalities like graph operations, pathfinding, and train scheduling.
+`functions`: Contains Go source files for various functionalities like graph operations, pathfinding, train scheduling, error handling and test suite file.
 `main.go`: Main entry point of the application.
 `network.map`: Example network map file containing station coordinates and connections.
 
@@ -30,17 +30,14 @@ git clone https://gitea.koodsisu.fi/ayodejiolumuyiwa/stations.git
 ├── go.mod
 └── src
     ├── functions
+    │   ├── error.go
     │   ├── graph.go
     │   ├── network.txt
     │   ├── pathfinding.go
-    │   └── shedule.go
+    │   ├── shedule.go
+    │   └── test.go
     ├── main.go
-    ├── network.map
-    ├── network2.map
-    ├── network_v1.map
-    ├── network_xxx.map
-    └── test.go
-
+    └── network.map
 
 ## Usage
 

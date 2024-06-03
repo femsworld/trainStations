@@ -5,9 +5,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
 	"stations/src/functions"
 )
+
+
 
 func main() {
 	if len(os.Args) < 4 || len(os.Args) > 5 {

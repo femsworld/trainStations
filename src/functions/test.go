@@ -1,29 +1,29 @@
-package main
+package functions
 
 import (
+    "io"
+    "os"
+    "strings"
     "testing"
-    "stations/src/functions"
 )
 
 func TestScheduleTrains(t *testing.T) {
-    // Test cases for ScheduleTrains function
     testCases := []struct {
         description      string
-        graph            *functions.Graph
+        graph            *Graph
         startStation     string
         endStation       string
         numTrains        int
         expectedResult   string
         expectedErrorMsg string
     }{
-        // Add test cases covering various scenarios, such as valid paths, invalid paths, error cases, etc.
         {
             description:    "Valid paths for 1 train",
             graph:          createLondonNetworkMap(),
             startStation:   "waterloo",
             endStation:     "st_pancras",
             numTrains:      1,
-            expectedResult: "Expected result for 1 train",
+            expectedResult: "Turn 1 Movements: T1-victoria\n", // Adjust based on expected output
         },
         {
             description:      "Invalid start station",
@@ -31,25 +31,38 @@ func TestScheduleTrains(t *testing.T) {
             startStation:     "invalid_station",
             endStation:       "st_pancras",
             numTrains:        1,
-            expectedErrorMsg: "Error: Start station does not exist",
+            expectedErrorMsg: "Error: Start station invalid_station does not exist in the map.\n",
         },
-        // Add more test cases covering other scenarios
+        // Add more test cases as needed
     }
 
-    // Run each test case
     for _, tc := range testCases {
         t.Run(tc.description, func(t *testing.T) {
-            // Call the ScheduleTrains function with the test case parameters
-            // and compare the result with the expected result or error message
-            // using t.Errorf if there's a mismatch
+            stderr := os.Stderr
+            r, w, _ := os.Pipe()
+            os.Stderr = w
+
+            ScheduleTrains(tc.graph, tc.startStation, tc.endStation, tc.numTrains)
+
+            w.Close()
+            os.Stderr = stderr
+            var buf strings.Builder
+            io.Copy(&buf, r)
+            errorOutput := buf.String()
+
+            if tc.expectedErrorMsg != "" && !strings.Contains(errorOutput, tc.expectedErrorMsg) {
+                t.Errorf("expected error message %q, but got %q", tc.expectedErrorMsg, errorOutput)
+            }
+
+            if tc.expectedResult != "" && !strings.Contains(errorOutput, tc.expectedResult) {
+                t.Errorf("expected result %q, but got %q", tc.expectedResult, errorOutput)
+            }
         })
     }
 }
 
-// Helper function to create the London Network Map for testing
-func createLondonNetworkMap() *functions.Graph {
-    // Create the graph and add stations and connections
-    graph := functions.NewGraph()
+func createLondonNetworkMap() *Graph {
+    graph := NewGraph()
     graph.AddNode("waterloo")
     graph.AddNode("victoria")
     graph.AddNode("euston")
