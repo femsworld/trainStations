@@ -39,31 +39,28 @@ func contains(slice []string, str string) bool {
 	return false
 }
 
-
-
-
 func bfs(graph *Graph, start, end string) []string {
-    queue := [][]string{{start}}
-    visited := make(map[string]bool)
-    visited[start] = true
+	queue := [][]string{{start}}
+	visited := make(map[string]bool)
+	visited[start] = true
 
-    for len(queue) > 0 {
-        path := queue[0]
-        queue = queue[1:]
-        node := path[len(path)-1]
+	for len(queue) > 0 {
+		path := queue[0]
+		queue = queue[1:]
+		node := path[len(path)-1]
 
-        if node == end {
-            return path
-        }
+		if node == end {
+			return path
+		}
 
-        for _, neighbor := range graph.nodes[node] {
-            if !visited[neighbor] {
-                visited[neighbor] = true
-                newPath := append([]string{}, path...)
-                newPath = append(newPath, neighbor)
-                queue = append(queue, newPath)
-            }
-        }
-    }
-    return nil
+		for _, neighbor := range graph.nodes[node] {
+			if !visited[neighbor] {
+				visited[neighbor] = true
+				newPath := append([]string{}, path...)
+				newPath = append(newPath, neighbor)
+				queue = append(queue, newPath)
+			}
+		}
+	}
+	return nil
 }

@@ -7,94 +7,61 @@ import (
 )
 
 func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int) {
-	// Find all possible paths for each train
 	allPaths := FindAllPaths(graph, startStation, endStation)
 	if len(allPaths) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: No paths found from %s to %s\n", startStation, endStation)
 		return
 	}
 
-	// Select paths for each train
-	paths := make([][]string, numTrains)
-	for i := 0; i < numTrains; i++ {
-		paths[i] = allPaths[i%len(allPaths)] // Distribute paths to trains
-		fmt.Printf("Path for train %d: %v\n", i+1, paths[i])
+	if len(allPaths) < numTrains {
+		fmt.Fprintf(os.Stderr, "Warning: Only %d paths available, %d trains requested\n", len(allPaths), numTrains)
 	}
 
-	maxTurns := 11 // Set the maximum number of turns
 	trainLocations := make([]string, numTrains)
-	for i := range trainLocations {
+	paths := make([][]string, numTrains)
+	trainsActive := make([]bool, numTrains)
+
+	for i := 0; i < numTrains; i++ {
 		trainLocations[i] = startStation
+		paths[i] = allPaths[i%len(allPaths)]
+		trainsActive[i] = true
 	}
 
-	for turn := 1; turn <= maxTurns; turn++ {
-		// Tracks used in this turn
-		usedTracks := make(map[string]bool)
+	maxTurns := 8
+	turn := 1
 
-		// Movements for this turn
-		movements := make([]string, numTrains)
-
-		// Map to track number of trains in each station
-		trainsInStation := make(map[string]int)
-		for _, loc := range trainLocations {
-			trainsInStation[loc]++
-		}
-
+	for turn <= maxTurns {
 		fmt.Printf("Turn %d:\n", turn)
-		// Move each train
+		turnMovements := []string{}
+
 		for i := 0; i < numTrains; i++ {
-			path := paths[i]
-			if len(path) > 1 {
-				source, dest := trainLocations[i], path[1]
-				// Ensure the track is not used more than once in a turn
-				track := fmt.Sprintf("%s-%s", source, dest)
-				if usedTracks[track] {
-					// Skip the movement if the track is already used
-					continue
-				}
-				usedTracks[track] = true
-
-				fmt.Printf("Train %d moving from %s to %s\n", i+1, source, dest)
-
-				// Ensure only one train is in each station (except start and end)
-				if trainLocations[i] != startStation && trainLocations[i] != endStation {
-					trainsInStation[source]--
-					if trainsInStation[source] > 1 {
-						fmt.Fprintf(os.Stderr, "Error: More than one train in station %s\n", source)
-						return
+			if trainsActive[i] {
+				if len(paths[i]) > 0 {
+					trainLocations[i] = paths[i][0]
+					paths[i] = paths[i][1:]
+					if len(paths[i]) == 0 {
+						trainsActive[i] = false // Train reached the end station
 					}
 				}
-
-				// Ensure the train moves only once per turn
-				if movements[i] == "" {
-					movements[i] = fmt.Sprintf("T%d-%s", i+1, dest)
-					trainLocations[i] = dest
-					trainsInStation[dest]++
-
-					// Remove the station from the path after the move
-					paths[i] = paths[i][1:]
-				} else {
-					fmt.Fprintf(os.Stderr, "Error: Train T%d moves more than once in turn %d\n", i+1, turn)
-					return
-				}
+				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
 			}
 		}
 
-		// Print movements for this turn
-		fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(movements, ", "))
+		fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(turnMovements, ", "))
 
-		// Check if all trains reached the end station
-		allTrainsAtEnd := true
-		for _, loc := range trainLocations {
-			if loc != endStation {
-				allTrainsAtEnd = false
+		allReached := true
+		for i := 0; i < numTrains; i++ {
+			if trainsActive[i] {
+				allReached = false
 				break
 			}
 		}
-		if allTrainsAtEnd {
+
+		if allReached {
 			fmt.Println("All trains successfully reached the end station.")
 			return
 		}
+		turn++
 	}
 
 	fmt.Println("Maximum number of turns reached. Some trains may not have reached the end station.")
