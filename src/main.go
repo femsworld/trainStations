@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"stations/src/functions"
 	"strconv"
 	"strings"
-	"stations/src/functions"
 )
 
 func main() {
@@ -57,5 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	functions.ScheduleTrains(graph, startStation, endStation, numTrains)
+	maxTurns := 6 // Update this value as needed
+
+	functions.ScheduleTrains(graph, startStation, endStation, numTrains, maxTurns)
 }

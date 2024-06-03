@@ -1,8 +1,10 @@
 stations:
-beethoven,1,6
-verdi,7,1
-albinoni,1,1
-handel,3,14
-mozart,14,9
-part,10,0
-invalid_station,a,2
+bond_square,20,6
+apple_avenue,7,7
+orange_junction,6,1
+space_port,1,11
+
+connections:
+bond_square-apple_avenue
+apple_avenue-orange_junction
+orange_junction-space_port

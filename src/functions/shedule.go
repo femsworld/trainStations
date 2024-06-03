@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int) {
+func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, maxTurns int) {
 	allPaths := FindAllPaths(graph, startStation, endStation)
 	if len(allPaths) == 0 {
 		fmt.Fprintf(os.Stderr, "Error: No paths found from %s to %s\n", startStation, endStation)
@@ -27,40 +27,51 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains int
 		trainsActive[i] = true
 	}
 
-	maxTurns := 6
 	turn := 1
 
 	for turn <= maxTurns {
 		fmt.Printf("Turn %d:\n", turn)
 		turnMovements := []string{}
 		stationOccupancy := make(map[string]int)
+		nextTrainLocations := make([]string, numTrains)
+		moveAllowed := make([]bool, numTrains)
 
-		// Move trains to their next stations
+		// First pass to determine next locations and check for conflicts
 		for i := 0; i < numTrains; i++ {
 			if trainsActive[i] {
 				if len(paths[i]) > 0 {
 					nextStation := paths[i][0]
-					paths[i] = paths[i][1:]
-
-					// Check if next station is not the start or end station and if it's already occupied
-					if nextStation != startStation && nextStation != endStation {
+					if nextStation == endStation || stationOccupancy[nextStation] == 0 {
+						nextTrainLocations[i] = nextStation
 						stationOccupancy[nextStation]++
-						if stationOccupancy[nextStation] > 1 {
-							fmt.Fprintf(os.Stderr, "Error: Station %s has more than one train in turn %d\n", nextStation, turn)
-							return
-						}
-					}
-
-					trainLocations[i] = nextStation
-					if len(paths[i]) == 0 {
-						trainsActive[i] = false // Train reached the end station
+						moveAllowed[i] = true
+					} else {
+						moveAllowed[i] = false
 					}
 				}
+			}
+		}
+
+		// Second pass to move trains if allowed
+		for i := 0; i < numTrains; i++ {
+			if trainsActive[i] && moveAllowed[i] {
+				trainLocations[i] = nextTrainLocations[i]
+				if trainLocations[i] != endStation {
+					paths[i] = paths[i][1:]
+				} else {
+					trainsActive[i] = false
+				}
+				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
+			} else if trainsActive[i] && trainLocations[i] != startStation {
 				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
 			}
 		}
 
-		fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(turnMovements, ", "))
+		if len(turnMovements) == 0 {
+			fmt.Printf("No train movements.\n")
+		} else {
+			fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(turnMovements, ", "))
+		}
 
 		allReached := true
 		for i := 0; i < numTrains; i++ {
