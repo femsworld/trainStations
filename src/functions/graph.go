@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"strconv"
 )
 
 type Graph struct {
@@ -126,6 +127,14 @@ func ReadGraphFromFile(filePath string) (*Graph, error) {
 			name := strings.ToLower(strings.TrimSpace(parts[0]))
 			x := strings.TrimSpace(parts[1])
 			y := strings.TrimSpace(parts[2])
+
+			if xCoord, err := strconv.Atoi(x); err != nil || xCoord < 0 {
+				return nil, fmt.Errorf("invalid x-coordinate for station %s: %s", name, x)
+			}
+
+			if yCoord, err := strconv.Atoi(y); err != nil || yCoord < 0 {
+				return nil, fmt.Errorf("invalid y-coordinate for station %s: %s", name, y)
+			}
 
 			if !isValidStationName(name) {
 				return nil, fmt.Errorf("invalid station name: %s", name)

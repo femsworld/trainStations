@@ -18,12 +18,12 @@ func TestScheduleTrains(t *testing.T) {
         expectedErrorMsg string
     }{
         {
-            description:    "Valid paths for 1 train",
+            description:    "Valid paths for 3 trains",
             graph:          createLondonNetworkMap(),
             startStation:   "waterloo",
             endStation:     "st_pancras",
-            numTrains:      1,
-            expectedResult: "Turn 1 Movements: T1-victoria\n", // Adjust based on expected output
+            numTrains:      3,
+            expectedResult: "All trains successfully reached the end station.",
         },
         {
             description:      "Invalid start station",
@@ -33,7 +33,6 @@ func TestScheduleTrains(t *testing.T) {
             numTrains:        1,
             expectedErrorMsg: "Error: Start station invalid_station does not exist in the map.\n",
         },
-        // Add more test cases as needed
     }
 
     for _, tc := range testCases {
@@ -42,20 +41,28 @@ func TestScheduleTrains(t *testing.T) {
             r, w, _ := os.Pipe()
             os.Stderr = w
 
+            stdout := os.Stdout
+            rOut, wOut, _ := os.Pipe()
+            os.Stdout = wOut
+
             ScheduleTrains(tc.graph, tc.startStation, tc.endStation, tc.numTrains)
 
             w.Close()
             os.Stderr = stderr
-            var buf strings.Builder
-            io.Copy(&buf, r)
-            errorOutput := buf.String()
+            os.Stdout = stdout
+            var errBuf strings.Builder
+            var outBuf strings.Builder
+            io.Copy(&errBuf, r)
+            io.Copy(&outBuf, rOut)
+            errorOutput := errBuf.String()
+            output := outBuf.String()
 
             if tc.expectedErrorMsg != "" && !strings.Contains(errorOutput, tc.expectedErrorMsg) {
                 t.Errorf("expected error message %q, but got %q", tc.expectedErrorMsg, errorOutput)
             }
 
-            if tc.expectedResult != "" && !strings.Contains(errorOutput, tc.expectedResult) {
-                t.Errorf("expected result %q, but got %q", tc.expectedResult, errorOutput)
+            if tc.expectedResult != "" && !strings.Contains(output, tc.expectedResult) {
+                t.Errorf("expected result %q, but got %q", tc.expectedResult, output)
             }
         })
     }

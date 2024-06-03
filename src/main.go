@@ -8,10 +8,9 @@ import (
 	"stations/src/functions"
 )
 
-
-
 func main() {
 	if len(os.Args) < 4 || len(os.Args) > 5 {
+		fmt.Println("Error: Too few or too many command-line arguments.")
 		fmt.Println("Usage: go run main.go <map_file> <start_station> <end_station> [num_trains]")
 		os.Exit(1)
 	}
@@ -20,7 +19,7 @@ func main() {
 	startStation := strings.ToLower(os.Args[2]) // Convert to lowercase
 	endStation := strings.ToLower(os.Args[3])   // Convert to lowercase
 
-	numTrains := 3 // default number of trains
+	var numTrains int
 	if len(os.Args) == 5 {
 		var err error
 		numTrains, err = strconv.Atoi(os.Args[4])
@@ -32,6 +31,10 @@ func main() {
 			fmt.Println("Error: Number of trains should be greater than 0.")
 			os.Exit(1)
 		}
+	} else {
+		fmt.Println("Error: Too few or too many command-line arguments.")
+		fmt.Println("Usage: go run main.go <map_file> <start_station> <end_station> [num_trains]")
+		os.Exit(1)
 	}
 
 	graph, err := functions.ReadGraphFromFile(mapFile)
