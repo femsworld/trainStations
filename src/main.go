@@ -138,19 +138,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	maxTurns := 6 // Default value, can be adjusted as needed
+	maxTurns := 50 // Default value, can be adjusted as needed
 
-	if startStation == "small" && endStation == "large" {
-		maxTurns = 8
-	}
+	// if startStation == "small" && endStation == "large" {
+	// 	maxTurns = 8
+	// }
 
-	if startStation == "jungle" && endStation == "desert" {
-		maxTurns = 8
-	}
+	// if startStation == "jungle" && endStation == "desert" {
+	// 	maxTurns = 8
+	// }
 
-	if startStation == "beginning" && endStation == "terminus" {
-		maxTurns = 11
-	}
+	// if startStation == "beginning" && endStation == "terminus" {
+	// 	maxTurns = 11
+	// }
 
 	functions.ScheduleTrains(graph, startStation, endStation, numTrains, maxTurns)
 }
