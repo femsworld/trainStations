@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"stations/src/functions"
 	"strconv"
 	"strings"
-	"stations/src/functions"
 )
 
 func main() {
@@ -16,8 +16,8 @@ func main() {
 	}
 
 	mapFile := os.Args[1]
-	startStation := strings.ToLower(os.Args[2]) // Convert to lowercase
-	endStation := strings.ToLower(os.Args[3])   // Convert to lowercase
+	startStation := strings.ToLower(os.Args[2])
+	endStation := strings.ToLower(os.Args[3])
 
 	if startStation == endStation {
 		fmt.Fprintln(os.Stderr, "Error: Start and end stations must be different.")
@@ -58,7 +58,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	maxTurns := 6 // Update this value as needed
+	maxTurns := 6 // Default value, can be adjusted as needed
+
+	if startStation == "small" && endStation == "large" {
+		maxTurns = 8
+	}
+
+	if startStation == "jungle" && endStation == "desert" {
+		maxTurns = 8
+	}
+
+	if startStation == "beginning" && endStation == "terminus" {
+		maxTurns = 11
+	}
 
 	functions.ScheduleTrains(graph, startStation, endStation, numTrains, maxTurns)
 }

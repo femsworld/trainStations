@@ -13,6 +13,56 @@ type Graph struct {
 	nodes map[string][]string
 }
 
+type Train struct {
+	ID               int
+	Path             []string
+	CurrentStationID int
+}
+
+func NewTrain(path []string) *Train {
+	return &Train{
+		Path:             path,
+		CurrentStationID: 0,
+	}
+}
+
+func (t *Train) NextStation() string {
+	if t.CurrentStationID < len(t.Path) {
+		return t.Path[t.CurrentStationID]
+	}
+	return ""
+}
+
+func (t *Train) MoveToNextStation() {
+	t.CurrentStationID++
+}
+
+func (t *Train) HasReachedDestination() bool {
+	return t.CurrentStationID >= len(t.Path)
+}
+
+func (t *Train) IsStationOccupied(station string) bool {
+	for _, s := range t.Path {
+		if s == station {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *Train) FreePreviousStation() {
+	if t.CurrentStationID > 0 {
+		t.Path[t.CurrentStationID-1] = ""
+	}
+}
+
+func (t *Train) CurrentStation() string {
+	if t.CurrentStationID < len(t.Path) {
+		return t.Path[t.CurrentStationID]
+	}
+	return ""
+}
+
 func NewGraph() *Graph {
 	return &Graph{nodes: make(map[string][]string)}
 }
@@ -73,6 +123,11 @@ func isValidStationName(name string) bool {
 		}
 	}
 	return true
+}
+
+func (g *Graph) GetAdjacentStations(station string) []string {
+	// Retrieve adjacent stations from the graph
+	return g.nodes[station]
 }
 
 // MaxStations defines the maximum number of stations allowed

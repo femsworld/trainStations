@@ -1,10 +1,16 @@
 stations:
-bond_square,20,6
-apple_avenue,7,7
-orange_junction,6,1
-space_port,1,11
+one,1,1
+two,2,2
+three,3,3
+four,4,4
+five,5,5
+six,6,6
 
 connections:
-bond_square-apple_avenue
-apple_avenue-orange_junction
-orange_junction-space_port
+two-three
+five-one
+three-one
+two-five
+one-four
+six-two
+one-six
