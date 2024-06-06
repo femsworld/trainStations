@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// ScheduleTrains schedules the movements of trains on the graph
 func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, maxTurns int) {
 	allPaths := FindAllPaths(graph, startStation, endStation)
 	if len(allPaths) == 0 {
@@ -17,13 +18,21 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, ma
 		fmt.Fprintf(os.Stderr, "Warning: Only %d paths available, %d trains requested\n", len(allPaths), numTrains)
 	}
 
+	// Initialize train locations, paths, and train activity status
 	trainLocations := make([]string, numTrains)
 	paths := make([][]string, numTrains)
 	trainsActive := make([]bool, numTrains)
 
+	// Assign paths to trains ensuring all trains have unique paths as much as possible
 	for i := 0; i < numTrains; i++ {
-		trainLocations[i] = startStation
 		paths[i] = allPaths[i%len(allPaths)]
+		if len(paths[i]) > 1 {
+			trainLocations[i] = paths[i][1] // Start from the first station in the path after the start station
+			paths[i] = paths[i][1:]
+		} else {
+			trainLocations[i] = endStation
+			paths[i] = []string{endStation}
+		}
 		trainsActive[i] = true
 	}
 
@@ -56,10 +65,10 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, ma
 		for i := 0; i < numTrains; i++ {
 			if trainsActive[i] && moveAllowed[i] {
 				trainLocations[i] = nextTrainLocations[i]
-				if trainLocations[i] != endStation {
-					paths[i] = paths[i][1:]
-				} else {
+				if trainLocations[i] == endStation {
 					trainsActive[i] = false
+				} else {
+					paths[i] = paths[i][1:]
 				}
 				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
 			} else if trainsActive[i] && trainLocations[i] != startStation {
