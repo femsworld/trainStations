@@ -36,10 +36,12 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, ma
 		trainsActive[i] = true
 	}
 
-	turn := 1
+	turn := 0 // Start turn at 0 to indicate starting position
 
 	for turn <= maxTurns {
-		fmt.Printf("Turn %d:\n", turn)
+		if turn > 0 {
+			fmt.Printf("Turn %d:\n", turn)
+		}
 		turnMovements := []string{}
 		stationOccupancy := make(map[string]int)
 		nextTrainLocations := make([]string, numTrains)
@@ -70,16 +72,20 @@ func ScheduleTrains(graph *Graph, startStation, endStation string, numTrains, ma
 				} else {
 					paths[i] = paths[i][1:]
 				}
-				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
-			} else if trainsActive[i] && trainLocations[i] != startStation {
+				if turn > 0 { // Do not print the starting position
+					turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
+				}
+			} else if trainsActive[i] && turn > 0 && trainLocations[i] != startStation {
 				turnMovements = append(turnMovements, fmt.Sprintf("T%d-%s", i+1, trainLocations[i]))
 			}
 		}
 
-		if len(turnMovements) == 0 {
-			fmt.Printf("No train movements.\n")
-		} else {
-			fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(turnMovements, ", "))
+		if turn > 0 {
+			if len(turnMovements) == 0 {
+				fmt.Printf("No train movements.\n")
+			} else {
+				fmt.Printf("Turn %d Movements: %s\n", turn, strings.Join(turnMovements, ", "))
+			}
 		}
 
 		allReached := true
