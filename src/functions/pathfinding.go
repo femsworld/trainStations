@@ -1,6 +1,5 @@
 package functions
 
-// FindAllPaths uses a BFS algorithm to find all possible paths between two stations
 func FindAllPaths(graph *Graph, start, end string) [][]string {
 	var result [][]string
 	var queue [][]string
@@ -29,7 +28,6 @@ func FindAllPaths(graph *Graph, start, end string) [][]string {
 	return result
 }
 
-// contains checks if a slice contains a string
 func contains(slice []string, str string) bool {
 	for _, v := range slice {
 		if v == str {
